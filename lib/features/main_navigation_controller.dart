@@ -4,8 +4,7 @@ import 'package:amharic_catholic_bible/features/bible/bible_screen.dart';
 import 'package:amharic_catholic_bible/features/search/bible_search_screen.dart';
 import 'package:amharic_catholic_bible/features/bookmarks/bookmarks_screen.dart';
 import 'package:amharic_catholic_bible/features/notes/notes_screen.dart';
-import 'package:amharic_catholic_bible/features/settings/settings_screen.dart';
-import 'package:amharic_catholic_bible/core/settings_manager.dart';
+
 
 class MainNavigationController extends StatefulWidget {
   const MainNavigationController({super.key});

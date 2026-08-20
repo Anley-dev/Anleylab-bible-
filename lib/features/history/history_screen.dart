@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:amharic_catholic_bible/core/constants/app_colors.dart';
-import 'package:amharic_catholic_bible/core/services/progress_service.dart';
+import 'package:amharic_catholic_bible/features/history/models/history_entry.dart';
+import 'package:amharic_catholic_bible/features/history/repositories/history_repository.dart';
 import 'package:amharic_catholic_bible/features/bible/chapter_reader_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -11,6 +12,8 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
+  final _repo = HistoryRepository();
+
   // Helper to categorize dates into human-friendly strings
   String _getSectionHeader(DateTime date) {
     final now = DateTime.now();
@@ -23,16 +26,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
     } else if (checkDate == yesterday) {
       return 'ትላንት (Yesterday)';
     } else {
-      // Return weekday in Amharic
       switch (date.weekday) {
-        case DateTime.monday: return 'ሰኞ (Monday)';
-        case DateTime.tuesday: return 'ማክሰኞ (Tuesday)';
+        case DateTime.monday:    return 'ሰኞ (Monday)';
+        case DateTime.tuesday:   return 'ማክሰኞ (Tuesday)';
         case DateTime.wednesday: return 'ረቡዕ (Wednesday)';
-        case DateTime.thursday: return 'ሐሙስ (Thursday)';
-        case DateTime.friday: return 'አርብ (Friday)';
-        case DateTime.saturday: return 'ቅዳሜ (Saturday)';
-        case DateTime.sunday: return 'እሑድ (Sunday)';
-        default: return 'ቀደም ሲል የነበሩ';
+        case DateTime.thursday:  return 'ሐሙስ (Thursday)';
+        case DateTime.friday:    return 'አርብ (Friday)';
+        case DateTime.saturday:  return 'ቅዳሜ (Saturday)';
+        case DateTime.sunday:    return 'እሑድ (Sunday)';
+        default:                 return 'ቀደም ሲል የነበሩ';
       }
     }
   }
@@ -50,30 +52,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
             onPressed: () async {
               final confirm = await showDialog<bool>(
                 context: context,
-                builder: (context) => AlertDialog(
+                builder: (ctx) => AlertDialog(
                   title: const Text('ታሪክ ማጽጃ'),
                   content: const Text('ሁሉንም የንባብ ታሪክ መሰረዝ እንደሚፈልጉ እርግጠኛ ነዎት?'),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('አይ')),
-                    TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('አዎ')),
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('አይ')),
+                    TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('አዎ')),
                   ],
                 ),
               );
               if (confirm == true) {
-                await ProgressService.clearHistory();
+                _repo.clear();
                 setState(() {});
               }
             },
-          )
+          ),
         ],
       ),
-      body: FutureBuilder<List<HistoryEntry>>(
-        future: ProgressService.getHistory(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final list = snapshot.data ?? [];
+      body: Builder(
+        builder: (context) {
+          final list = _repo.getAll();
           if (list.isEmpty) {
             return Center(
               child: Column(
@@ -124,7 +122,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       final entry = sectionEntries[index];
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: AppColors.primary.withOpacity(0.1),
+                          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                           child: Icon(Icons.book_outlined, color: AppColors.primary),
                         ),
                         title: Text(
@@ -137,7 +135,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ChapterReaderScreen(
+                              builder: (_) => ChapterReaderScreen(
                                 bookName: entry.book,
                                 chapterNumber: entry.chapter,
                                 initialScrollOffset: entry.scrollOffset,

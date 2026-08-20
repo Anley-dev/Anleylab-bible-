@@ -69,32 +69,30 @@ class _BibleScreenState extends State<BibleScreen> {
   void _handleBookSelection(BuildContext context, String book) async {
     // 1. Fetch the chapter list first
     List<String> chapters = await _controller.getChapterList(book);
-    
-    // 2. Open a modal or a new screen to let the user pick
+
+    // 2. Open a modal to let the user pick a chapter
     if (!context.mounted) return;
     showModalBottomSheet(
       context: context,
-      builder: (context) => GridView.builder(
+      // sheetContext is scoped to the sheet; we keep the outer [context] for
+      // Navigator.push so it is always valid after the sheet is dismissed.
+      builder: (sheetContext) => GridView.builder(
         padding: const EdgeInsets.all(20),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 5),
         itemCount: chapters.length,
-        itemBuilder: (context, index) => ElevatedButton(
+        itemBuilder: (_, index) => ElevatedButton(
           onPressed: () {
-            Navigator.pop(context); // Close picker
-            // 3. Now navigate to the specific chosen chapter
+            Navigator.pop(sheetContext); // close the sheet
+            // 3. Navigate using the stable outer context — no Element hack needed
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ChapterReaderScreen(
+                builder: (_) => ChapterReaderScreen(
                   bookName: book,
                   chapterNumber: chapters[index],
                 ),
               ),
-            ).then((_) {
-              if (context.mounted) {
-                (context as Element).markNeedsBuild();
-              }
-            });
+            );
           },
           child: Text(chapters[index]),
         ),

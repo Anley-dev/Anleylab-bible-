@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:amharic_catholic_bible/core/constants/app_colors.dart';
 import 'package:amharic_catholic_bible/core/settings_manager.dart';
+import 'package:amharic_catholic_bible/core/services/share_service.dart';
 import 'package:amharic_catholic_bible/features/bible/bible_controller.dart';
 import 'package:amharic_catholic_bible/features/search/bible_search_screen.dart';
 
@@ -13,6 +13,7 @@ import 'package:amharic_catholic_bible/features/highlights/repositories/highligh
 import 'package:amharic_catholic_bible/features/notes/models/note.dart';
 import 'package:amharic_catholic_bible/features/notes/repositories/note_repository.dart';
 import 'package:uuid/uuid.dart';
+
 
 class ChapterReaderScreen extends StatefulWidget {
   final String bookName;
@@ -186,6 +187,25 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
                       }
                     },
                 ),
+                ListTile(
+                  leading: const Icon(Icons.share_outlined),
+                  title: const Text('ጥቅስ አጋራ (Share / Copy)'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await ShareService.shareVerse(
+                      bookName: widget.bookName,
+                      chapter: widget.chapterNumber,
+                      verse: verseNum.toString(),
+                      text: text,
+                    );
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('ጥቅሱ ወደ ቅንጥብ ሰሌዳ ተቀድቷል!')),
+                      );
+                    }
+                  },
+                ),
+
                 ListTile(
                   leading: const Icon(Icons.edit_note),
                   title: const Text('ማስታወሻ ያዝ (Add Note)'),

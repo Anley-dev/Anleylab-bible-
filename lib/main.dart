@@ -1,16 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:amharic_catholic_bible/core/settings_manager.dart';
-import 'package:amharic_catholic_bible/features/bible/bible_screen.dart';
-import 'package:amharic_catholic_bible/features/bible/chapter_reader_screen.dart';
-import 'package:amharic_catholic_bible/features/bookmarks/bookmarks_screen.dart';
-import 'package:amharic_catholic_bible/features/history/repositories/history_repository.dart';
-import 'package:amharic_catholic_bible/features/history/models/history_entry.dart';
 import 'package:amharic_catholic_bible/core/services/storage_service.dart';
-import 'package:amharic_catholic_bible/features/search/bible_search_screen.dart';
-import 'package:amharic_catholic_bible/features/notes/notes_screen.dart';
-import 'package:amharic_catholic_bible/features/settings/settings_screen.dart';
 import 'package:amharic_catholic_bible/features/splash/splash_screen.dart';
-import 'package:amharic_catholic_bible/features/home/home_screen.dart';
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,13 +1,24 @@
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:amharic_catholic_bible/app/app.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:amharic_catholic_bible/core/services/storage_service.dart';
+import 'package:amharic_catholic_bible/main.dart';
 
 void main() {
   testWidgets('Bible app smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const AnleyLabBibleApp());
+    // Mock SharedPreferences to avoid platform channel timeout.
+    SharedPreferences.setMockInitialValues({});
 
-    // Verify that our app starts and displays the home screen welcome text.
-    expect(find.text('እንኳን ወደ ANLEYLAB መጽሐፍ ቅዱስ በደህና መጡ።'), findsOneWidget);
+    // Initialise storage before the app starts (mirrors main()).
+    await StorageService.init();
+
+    // Build the real app root and trigger a frame.
+    await tester.pumpWidget(const MyApp());
+
+    // Verify that the splash screen renders without crashing.
+    expect(find.text('ANLEYLAB Bible'), findsOneWidget);
+
+    // Allow the splash screen timer to complete and navigate.
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump();
   });
 }
