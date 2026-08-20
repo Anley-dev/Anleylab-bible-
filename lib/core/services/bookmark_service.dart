@@ -1,89 +1,42 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:amharic_catholic_bible/data/models/bookmark_model.dart';
+import 'package:amharic_catholic_bible/core/services/storage_service.dart';
 
-/// Handles persisting and retrieving [Bookmark] objects via SharedPreferences.
 class BookmarkService {
-  static const String _key = 'bookmarks';
+  static const String _keyBookmarks = 'user_bookmarks_list';
 
-  // ---------------------------------------------------------------------------
-  // Read
-  // ---------------------------------------------------------------------------
-
-  static Future<List<Bookmark>> getBookmarks() async {
-    final prefs = await SharedPreferences.getInstance();
-    final List<String> raw = prefs.getStringList(_key) ?? [];
-    return raw
-        .map((e) => Bookmark.fromMap(jsonDecode(e) as Map<String, dynamic>))
-        .toList();
+  // Fetch all bookmarks
+  Future<List<Map<String, String>>> getBookmarks() async {
+    final String? jsonString = StorageService.getString(_keyBookmarks);
+    if (jsonString == null || jsonString.isEmpty) return [];
+    try {
+      final List<dynamic> decoded = jsonDecode(jsonString);
+      return decoded.map((item) => Map<String, String>.from(item)).toList();
+    } catch (_) {
+      return [];
+    }
   }
 
-  /// Returns `true` if the given verse is already bookmarked.
-  static Future<bool> isBookmarked({
-    required String bookName,
-    required int chapter,
-    required int verseNumber,
-  }) async {
+  // Save a bookmark
+  Future<void> saveBookmark(String book, String chapter, String verse, String text) async {
     final bookmarks = await getBookmarks();
-    return bookmarks.any(
-      (b) =>
-          b.bookName == bookName &&
-          b.chapter == chapter &&
-          b.verseNumber == verseNumber,
-    );
+    // Prevent duplicate entries
+    bookmarks.removeWhere((item) =>
+      item['book'] == book && item['chapter'] == chapter && item['verse'] == verse);
+    bookmarks.insert(0, {
+      'book': book,
+      'chapter': chapter,
+      'verse': verse,
+      'text': text,
+      'date': DateTime.now().toIso8601String(),
+    });
+    await StorageService.setString(_keyBookmarks, jsonEncode(bookmarks));
   }
 
-  // ---------------------------------------------------------------------------
-  // Write
-  // ---------------------------------------------------------------------------
-
-  static Future<void> addBookmark(Bookmark bookmark) async {
-    final prefs = await SharedPreferences.getInstance();
+  // Remove a single bookmark
+  Future<void> removeBookmark(String book, String chapter, String verse) async {
     final bookmarks = await getBookmarks();
-
-    // Prevent exact duplicates
-    final alreadyExists = bookmarks.any(
-      (b) =>
-          b.bookName == bookmark.bookName &&
-          b.chapter == bookmark.chapter &&
-          b.verseNumber == bookmark.verseNumber,
-    );
-    if (alreadyExists) return;
-
-    bookmarks.add(bookmark);
-    await _persist(prefs, bookmarks);
-  }
-
-  static Future<void> removeBookmark({
-    required String bookName,
-    required int chapter,
-    required int verseNumber,
-  }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final bookmarks = await getBookmarks();
-    bookmarks.removeWhere(
-      (b) =>
-          b.bookName == bookName &&
-          b.chapter == chapter &&
-          b.verseNumber == verseNumber,
-    );
-    await _persist(prefs, bookmarks);
-  }
-
-  static Future<void> clearAll() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_key);
-  }
-
-  // ---------------------------------------------------------------------------
-  // Internal
-  // ---------------------------------------------------------------------------
-
-  static Future<void> _persist(
-    SharedPreferences prefs,
-    List<Bookmark> bookmarks,
-  ) async {
-    final encoded = bookmarks.map((b) => jsonEncode(b.toMap())).toList();
-    await prefs.setStringList(_key, encoded);
+    bookmarks.removeWhere((item) =>
+      item['book'] == book && item['chapter'] == chapter && item['verse'] == verse);
+    await StorageService.setString(_keyBookmarks, jsonEncode(bookmarks));
   }
 }

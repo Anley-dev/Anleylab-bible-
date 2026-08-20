@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:amharic_catholic_bible/core/settings_manager.dart';
-import 'package:amharic_catholic_bible/features/bible/bible_screen.dart'; 
+import 'package:amharic_catholic_bible/features/bible/bible_screen.dart';
 import 'package:amharic_catholic_bible/features/bible/chapter_reader_screen.dart';
 import 'package:amharic_catholic_bible/features/bookmarks/bookmarks_screen.dart';
+import 'package:amharic_catholic_bible/features/history/repositories/history_repository.dart';
+import 'package:amharic_catholic_bible/features/history/models/history_entry.dart';
+import 'package:amharic_catholic_bible/core/services/storage_service.dart';
+import 'package:amharic_catholic_bible/features/search/bible_search_screen.dart';
+import 'package:amharic_catholic_bible/features/notes/notes_screen.dart';
+import 'package:amharic_catholic_bible/features/settings/settings_screen.dart';
+import 'package:amharic_catholic_bible/features/splash/splash_screen.dart';
+import 'package:amharic_catholic_bible/features/home/home_screen.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await StorageService.init();
   runApp(const MyApp());
 }
 
@@ -57,91 +66,11 @@ class _MyAppState extends State<MyApp> {
           elevation: 0,
         ),
       ),
-      home: const MainNavigationController(),
+      home: const SplashScreen(),
     );
   }
 }
 
-class MainNavigationController extends StatefulWidget {
-  const MainNavigationController({super.key});
 
-  @override
-  State<MainNavigationController> createState() => _MainNavigationControllerState();
-}
 
-class _MainNavigationControllerState extends State<MainNavigationController> {
-  int _currentIndex = 0;
-
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const BookmarksScreen(),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.book), label: 'መጽሐፍ'),
-          BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'ምልክቶች'),
-        ],
-      ),
-    );
-  }
-}
-
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  @override
-  Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final bool isTablet = screenWidth > 650;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('ANLEYLAB BIBLE', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-      ),
-      body: Center(
-        child: Container(
-          constraints: BoxConstraints(maxWidth: isTablet ? 650 : double.infinity),
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 24),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
-),
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const BibleScreen()),
-                    ),
-                    icon: const Icon(Icons.menu_book),
-                    label: const Text('የመጻሕፍት ዝርዝር (Books List)'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
+// HomeScreen implementation moved to lib/features/home/home_screen.dart

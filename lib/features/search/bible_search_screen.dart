@@ -25,6 +25,7 @@ class BibleSearchScreen extends StatefulWidget {
 class _BibleSearchScreenState extends State<BibleSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   final Map<String, List<VerseSearchResult>> _invertedIndex = {};
+  final List<VerseSearchResult> _allVerses = [];
   final BibleRepository _repo = BibleRepository();
   
   List<VerseSearchResult> _searchResults = [];
@@ -41,6 +42,7 @@ class _BibleSearchScreenState extends State<BibleSearchScreen> {
     try {
       final Map<String, dynamic> rawBible = await _repo.getFullBible();
       _invertedIndex.clear(); 
+      _allVerses.clear();
 
       rawBible.forEach((bookName, chapters) {
         if (chapters is Map) {
@@ -48,6 +50,14 @@ class _BibleSearchScreenState extends State<BibleSearchScreen> {
             if (verses is Map) {
               verses.forEach((verseNum, verseText) {
                 String text = verseText.toString();
+
+                final result = VerseSearchResult(
+                  bookName: bookName,
+                  chapter: chapterNum.toString(),
+                  verse: verseNum.toString(),
+                  text: text,
+                );
+                _allVerses.add(result);
 
                 // Splits Amharic words correctly while ignoring punctuation marks
                 List<String> words = text
@@ -59,14 +69,7 @@ class _BibleSearchScreenState extends State<BibleSearchScreen> {
                   if (cleanWord.isEmpty || cleanWord.length < 2) continue;
 
                   _invertedIndex.putIfAbsent(cleanWord, () => []);
-                  _invertedIndex[cleanWord]!.add(
-                    VerseSearchResult(
-                      bookName: bookName,
-                      chapter: chapterNum.toString(),
-                      verse: verseNum.toString(),
-                      text: text,
-                    ),
-                  );
+                  _invertedIndex[cleanWord]!.add(result);
                 }
               });
             }
@@ -96,13 +99,44 @@ class _BibleSearchScreenState extends State<BibleSearchScreen> {
     final stopwatch = Stopwatch()..start();
     String cleanQuery = query.trim();
     List<VerseSearchResult> localResults = [];
+    final Set<String> uniqueCheck = {};
 
+    // 1. Check for Reference Search (e.g. "2ተኛ ዜና 26፥5")
+    bool isReferenceSearch = cleanQuery.contains(RegExp(r'\d')) || cleanQuery.contains(':') || cleanQuery.contains('፥');
+    if (isReferenceSearch) {
+      String normalizedQuery = cleanQuery.replaceAll('፥', ':').replaceAll('ተኛ', 'ኛ');
+      List<String> queryParts = normalizedQuery.split(RegExp(r'\s+'));
+
+      for (var result in _allVerses) {
+        String ref = "${result.bookName} ${result.chapter}:${result.verse}";
+        bool matchesRef = true;
+        for (var part in queryParts) {
+          if (!ref.contains(part)) {
+            matchesRef = false;
+            break;
+          }
+        }
+        if (matchesRef) {
+          final uniqueId = "${result.bookName}_${result.chapter}_${result.verse}";
+          if (!uniqueCheck.contains(uniqueId)) {
+            uniqueCheck.add(uniqueId);
+            localResults.add(result);
+          }
+        }
+      }
+    }
+
+    // 2. Text Search
     if (_invertedIndex.containsKey(cleanQuery)) {
-      localResults = List.from(_invertedIndex[cleanQuery]!);
+      for (var result in _invertedIndex[cleanQuery]!) {
+        final uniqueId = "${result.bookName}_${result.chapter}_${result.verse}";
+        if (!uniqueCheck.contains(uniqueId)) {
+          uniqueCheck.add(uniqueId);
+          localResults.add(result);
+        }
+      }
     } else {
       final matchingKeys = _invertedIndex.keys.where((key) => key.contains(cleanQuery));
-      final Set<String> uniqueCheck = {};
-      
       for (var key in matchingKeys) {
         for (var result in _invertedIndex[key]!) {
           final uniqueId = "${result.bookName}_${result.chapter}_${result.verse}";
