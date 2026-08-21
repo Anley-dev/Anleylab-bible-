@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:amharic_catholic_bible/core/settings_manager.dart';
 import 'package:amharic_catholic_bible/core/services/storage_service.dart';
-import 'package:amharic_catholic_bible/features/splash/splash_screen.dart';
-
+import 'package:amharic_catholic_bible/screens/splash_screen.dart';
+import 'package:amharic_catholic_bible/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,30 +39,11 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'ANLEYLAB BIBLE',
       debugShowCheckedModeBanner: false,
-      themeMode: globalSettings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      theme: ThemeData(
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          elevation: 0,
-        ),
-      ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF121212),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF1E1E1E),
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
-      ),
+      themeMode:
+          globalSettings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
       home: const SplashScreen(),
     );
   }
 }
-
-
-
-// HomeScreen implementation moved to lib/features/home/home_screen.dart
