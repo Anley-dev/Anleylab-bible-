@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:amharic_catholic_bible/features/home/home_screen.dart';
-import 'package:amharic_catholic_bible/features/bible/bible_screen.dart';
+import 'package:amharic_catholic_bible/features/bible/screens/bible_split_view.dart';
 import 'package:amharic_catholic_bible/features/search/bible_search_screen.dart';
 import 'package:amharic_catholic_bible/features/bookmarks/bookmarks_screen.dart';
 import 'package:amharic_catholic_bible/features/notes/notes_screen.dart';
@@ -19,7 +19,7 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
   List<Widget> _buildScreens() {
     return [
       const HomeScreen(),
-      const BibleScreen(),
+      const BibleSplitView(),
       const BibleSearchScreen(),
       const BookmarksScreen(),
       const NotesScreen(),

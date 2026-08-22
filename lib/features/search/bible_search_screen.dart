@@ -180,7 +180,7 @@ class _BibleSearchScreenState extends State<BibleSearchScreen> {
                   decoration: BoxDecoration(
                     color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade900 : Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                   ),
                   child: TextField(
                     controller: _searchController,
@@ -202,7 +202,7 @@ class _BibleSearchScreenState extends State<BibleSearchScreen> {
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      "በ ${_searchExecutionTime} ውስጥ ${_searchResults.length} ውጤቶች ተገኝተዋል",
+                      "በ $_searchExecutionTime ውስጥ ${_searchResults.length} ውጤቶች ተገኝተዋል",
                       style: const TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                   ),

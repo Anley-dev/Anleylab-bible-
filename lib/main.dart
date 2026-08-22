@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:amharic_catholic_bible/core/settings_manager.dart';
 import 'package:amharic_catholic_bible/core/services/storage_service.dart';
-import 'package:amharic_catholic_bible/screens/splash_screen.dart';
+import 'package:amharic_catholic_bible/features/splash/splash_screen.dart';
 import 'package:amharic_catholic_bible/theme/app_theme.dart';
 
 Future<void> main() async {
@@ -39,8 +39,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'ANLEYLAB BIBLE',
       debugShowCheckedModeBanner: false,
-      themeMode:
-          globalSettings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      themeMode: globalSettings.themeMode,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       home: const SplashScreen(),

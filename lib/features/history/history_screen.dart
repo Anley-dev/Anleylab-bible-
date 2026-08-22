@@ -117,7 +117,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: sectionEntries.length,
-                    separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.shade200),
+                    separatorBuilder: (_, _) => Divider(height: 1, color: Colors.grey.shade200),
                     itemBuilder: (context, index) {
                       final entry = sectionEntries[index];
                       return ListTile(
@@ -137,7 +137,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             MaterialPageRoute(
                               builder: (_) => ChapterReaderScreen(
                                 bookName: entry.book,
-                                chapterNumber: entry.chapter,
+                                chapterNumber: entry.chapter.toString(),
                                 initialScrollOffset: entry.scrollOffset,
                               ),
                             ),

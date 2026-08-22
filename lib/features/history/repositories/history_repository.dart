@@ -21,12 +21,7 @@ class HistoryRepository {
         final List<dynamic> jsonList = jsonDecode(data);
         _entries.clear();
         for (var item in jsonList) {
-          _entries.add(HistoryEntry(
-            book: item['book'],
-            chapter: item['chapter'],
-            scrollOffset: (item['scrollOffset'] as num).toDouble(),
-            timestamp: DateTime.parse(item['timestamp']),
-          ));
+          _entries.add(HistoryEntry.fromJson(item));
         }
       } catch (e) {
         // Handle error quietly
@@ -35,12 +30,7 @@ class HistoryRepository {
   }
 
   void _saveToStorage() {
-    final List<Map<String, dynamic>> jsonList = _entries.map((e) => {
-      'book': e.book,
-      'chapter': e.chapter,
-      'scrollOffset': e.scrollOffset,
-      'timestamp': e.timestamp.toIso8601String(),
-    }).toList();
+    final List<Map<String, dynamic>> jsonList = _entries.map((e) => e.toJson()).toList();
     StorageService.setString(_storageKey, jsonEncode(jsonList));
   }
 
@@ -50,7 +40,7 @@ class HistoryRepository {
   /// Adds a new history entry.
   void add(HistoryEntry entry) {
     // Remove existing entry for the same chapter so it moves to top
-    _entries.removeWhere((e) => e.book == entry.book && e.chapter == entry.chapter);
+    _entries.removeWhere((e) => e.bookId == entry.bookId && e.chapter == entry.chapter);
     _entries.add(entry);
     
     // Keep only last 10 entries

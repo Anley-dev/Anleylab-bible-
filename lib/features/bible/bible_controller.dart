@@ -19,9 +19,20 @@ class BibleController {
   /// Fetches specific chapter verses for the ChapterReaderScreen
   Future<Map<String, String>> getChapter(String bookName, String chapterNumber) async {
     final data = await _repo.getFullBible();
+    final chapterData = Map<String, dynamic>.from(data[bookName][chapterNumber]);
     
-    // Accesses the specific book then the specific chapter
-    return Map<String, String>.from(data[bookName][chapterNumber]);
+    // Sort keys numerically to ensure verses are in perfect 1, 2, 3... sequence
+    final sortedKeys = chapterData.keys.toList()..sort((a, b) {
+      final intA = int.tryParse(a) ?? 0;
+      final intB = int.tryParse(b) ?? 0;
+      return intA.compareTo(intB);
+    });
+
+    final Map<String, String> sortedVerses = {};
+    for (final key in sortedKeys) {
+      sortedVerses[key] = chapterData[key].toString();
+    }
+    return sortedVerses;
   }
 
   /// Helper to check if a chapter exists (useful for Next/Previous navigation)

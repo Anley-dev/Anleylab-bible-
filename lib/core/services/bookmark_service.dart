@@ -1,8 +1,14 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:amharic_catholic_bible/core/services/storage_service.dart';
 
 class BookmarkService {
+  static final BookmarkService _instance = BookmarkService._internal();
+  factory BookmarkService() => _instance;
+  BookmarkService._internal();
+
   static const String _keyBookmarks = 'user_bookmarks_list';
+  final ValueNotifier<int> notifier = ValueNotifier<int>(0);
 
   // Fetch all bookmarks
   Future<List<Map<String, String>>> getBookmarks() async {
@@ -30,6 +36,7 @@ class BookmarkService {
       'date': DateTime.now().toIso8601String(),
     });
     await StorageService.setString(_keyBookmarks, jsonEncode(bookmarks));
+    notifier.value++;
   }
 
   // Remove a single bookmark
@@ -38,5 +45,6 @@ class BookmarkService {
     bookmarks.removeWhere((item) =>
       item['book'] == book && item['chapter'] == chapter && item['verse'] == verse);
     await StorageService.setString(_keyBookmarks, jsonEncode(bookmarks));
+    notifier.value++;
   }
 }

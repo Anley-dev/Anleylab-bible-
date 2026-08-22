@@ -33,6 +33,7 @@ dependencies:
   shared_preferences: ^2.3.0
 
   uuid: ^4.2.2
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:
@@ -44,6 +45,14 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/app_icon.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -57,6 +66,7 @@ flutter:
   assets:
     - assets/bible/amharic_bible.json
     - assets/icons/
+    - assets/images/
 
   # NotoSansEthiopic — variable font covering the full Ethiopic Unicode block
   fonts:

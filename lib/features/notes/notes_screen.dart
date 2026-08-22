@@ -265,9 +265,11 @@ class _NotesScreenState extends State<NotesScreen> {
                     return confirmed == true;
                   },
                   onDismissed: (_) async {
+                    // Capture messenger before async gap.
+                    final messenger = ScaffoldMessenger.of(context);
                     await _deleteNote(note.id);
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      messenger.showSnackBar(
                         const SnackBar(content: Text('ማስታወሻው ተሰርዟል።')),
                       );
                     }

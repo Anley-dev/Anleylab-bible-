@@ -1,15 +1,13 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:amharic_catholic_bible/core/services/storage_service.dart';
-import 'package:amharic_catholic_bible/core/settings_manager.dart';
-import 'package:amharic_catholic_bible/data/repositories/bible_repository.dart';
-import 'package:amharic_catholic_bible/features/bible/chapter_reader_screen.dart';
-import 'package:amharic_catholic_bible/features/bible/bible_screen.dart';
-import 'package:amharic_catholic_bible/features/history/repositories/history_repository.dart';
+import 'package:amharic_catholic_bible/theme/app_colors.dart';
+import 'package:amharic_catholic_bible/theme/app_tokens.dart';
+import 'package:amharic_catholic_bible/theme/app_typography.dart';
 import 'package:amharic_catholic_bible/features/history/models/history_entry.dart';
+import 'package:amharic_catholic_bible/features/history/repositories/history_repository.dart';
+import 'package:amharic_catholic_bible/features/history/history_screen.dart';
 import 'package:amharic_catholic_bible/features/settings/settings_screen.dart';
-import 'package:amharic_catholic_bible/features/main_navigation_controller.dart';
-
-
+import 'package:amharic_catholic_bible/features/bible/chapter_reader_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,225 +19,264 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final HistoryRepository _historyRepository = HistoryRepository();
 
-  // Verse of the day — changes every calendar day
-  Map<String, String>? _verseOfDay;
-
   @override
-  void initState() {
-    super.initState();
-    _loadVerseOfDay();
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final entries = _historyRepository.getAll();
+    final HistoryEntry? lastRead = entries.isNotEmpty ? entries.last : null;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'ANLEYLAB መጽሐፍ ቅዱስ',
+          style: AppTypography.appTitle(context, isDark: isDark),
+        ),
+        actions: [
+          // History Button
+          IconButton(
+            icon: const Icon(Icons.history_outlined),
+            tooltip: 'ታሪክ',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const HistoryScreen()),
+              ).then((_) => setState(() {}));
+            },
+          ),
+          // Settings Button
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'መቼቶች',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const SettingsScreen(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: AppSpacing.sm),
+        ],
+      ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          children: [
+            // Signature verse + daily quote header
+            const HeaderVerseCard(),
+
+            // Continue Reading Section
+            if (lastRead != null) ...[
+              Text(
+                'የመጨረሻ ንባብ',
+                style: AppTypography.sectionTitle(context, isDark: isDark),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _buildContinueReadingCard(context, lastRead, isDark),
+            ] else ...[
+              // Empty State when no history exists
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.massive),
+                  child: Text(
+                    'ምንም የተነበበ ታሪክ የለም',
+                    style: AppTypography.secondaryText(isDark: isDark),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 
-  /// Returns day-of-year (0-based) so the verse rotates every calendar day.
-  int _getDayOfYear() {
+  Widget _buildContinueReadingCard(
+    BuildContext context,
+    HistoryEntry history,
+    bool isDark,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.cardDark : AppColors.cardLight,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(
+          color: isDark ? AppColors.dividerDark : AppColors.dividerLight,
+        ),
+        boxShadow: AppShadows.subtle,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ChapterReaderScreen(
+                  bookName: history.bookNameAmharic,
+                  chapterNumber: history.chapter.toString(),
+                  initialScrollOffset: history.scrollOffset,
+                ),
+              ),
+            ).then((_) => setState(() {}));
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.liturgicalBlue.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
+                  child: const Icon(
+                    Icons.bookmark_outlined,
+                    color: AppColors.liturgicalBlue,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        history.bookNameAmharic,
+                        style: AppTypography.bookTitle(context, isDark: isDark),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'ምዕራፍ ${history.chapter} ፡ ቁጥር ${history.verse}',
+                        style: AppTypography.secondaryText(isDark: isDark),
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      'ቀጥል',
+                      style: AppTypography.buttonText(isDark: isDark),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    const Icon(
+                      Icons.arrow_forward,
+                      size: 16,
+                      color: AppColors.liturgicalBlue,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Permanent signature verse + rotating daily quote widget
+class HeaderVerseCard extends StatelessWidget {
+  const HeaderVerseCard({super.key});
+
+  static const List<Map<String, String>> _dailyVerses = [
+    {
+      'text': '"እግዚአብሔር ብርሃኔና መድኃኒቴ ነው፤ የሚያስፈራኝ ማን ነው?"',
+      'ref': 'መዝሙር 27:1'
+    },
+    {
+      'text': '"በሙሉ ልብህ በእግዚአብሔር ታመን፤ በራስህም ማስተዋል አትደገፍ።"',
+      'ref': 'ምሳሌ 3:5'
+    },
+    {
+      'text': '"ሰላምን እተውላችኋለሁ፤ ሰላሜን እሰጣችኋለሁ፤ እኔ የምሰጣችሁ ዓለም እንደሚሰጠው አይደለም።"',
+      'ref': 'ዮሐንስ 14:27'
+    },
+    {
+      'text': '"ኃይልን በሚሰጠኝ በእርሱ ሁሉን ማድረግ እችላለሁ።"',
+      'ref': 'ፊልጵስዩስ 4:13'
+    },
+  ];
+
+  Map<String, String> _getDailyVerse() {
     final now = DateTime.now();
-    return now.difference(DateTime(now.year, 1, 1)).inDays;
-  }
-
-  /// Picks a deterministic verse based on today's date from the full bible.
-  Future<void> _loadVerseOfDay() async {
-    try {
-      final repo = BibleRepository();
-      final data = await repo.getFullBible();
-      final books = data.keys.toList();
-
-      final day = _getDayOfYear();
-      final bookName = books[day % books.length];
-      final chapters = data[bookName] as Map<String, dynamic>;
-      final chapterKeys = chapters.keys.toList()
-        ..sort((a, b) => int.parse(a).compareTo(int.parse(b)));
-      final chapterKey = chapterKeys[(day ~/ books.length) % chapterKeys.length];
-      final verses = chapters[chapterKey] as Map<String, dynamic>;
-      final verseKeys = verses.keys.toList()
-        ..sort((a, b) => int.parse(a).compareTo(int.parse(b)));
-      final verseKey = verseKeys[day % verseKeys.length];
-
-      if (mounted) {
-        setState(() {
-          _verseOfDay = {
-            'book': bookName,
-            'chapter': chapterKey,
-            'verse': verseKey,
-            'text': verses[verseKey].toString(),
-          };
-        });
-      }
-    } catch (_) {
-      // If loading fails, _verseOfDay remains null and a fallback is shown.
-    }
+    final dayOfYear = now.year * 365 + now.month * 31 + now.day;
+    final random = Random(dayOfYear);
+    return _dailyVerses[random.nextInt(_dailyVerses.length)];
   }
 
   @override
   Widget build(BuildContext context) {
+    final dailyVerse = _getDailyVerse();
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final entries = _historyRepository.getAll();
-    final HistoryEntry? _latestEntry = entries.isNotEmpty ? entries.last : null;
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final bool isTablet = screenWidth > 650;
-    final bool isFirstLaunch = StorageService.getString('firstLaunchDone') != 'true';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. PERMANENT SIGNATURE VERSE (PURE TEXT IN GOLD — NO LABEL)
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(top: 8.0, bottom: 12.0),
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFFFFDF5),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFFD4AF37), // Metallic Gold
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFD4AF37).withValues(alpha: 0.12),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Text(
+            '"እነሱ ጥሪዬን ችላ አሉ፤ እግዚአብሔር ግን ጸሎቴን መረጠ። በሰው የተናቀው ድንጋይ፡ በእግዚአብሔር እጅ የማዕዘን ራስ ሆነ።"',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              height: 1.5,
+              color: Color(0xFFC59B27), // Elegant Gold Text
+            ),
+          ),
+        ),
 
-
-    // Builds the verse-of-the-day card using the state loaded in initState.
-    Widget _todayVerse = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Card(
-        elevation: 2,
-        child: _verseOfDay == null
-            // Loading state — show a slim progress bar until the verse is ready.
-            ? const ListTile(
-                title: Text('የዕለቱ ጥቅስ'),
-                subtitle: LinearProgressIndicator(),
-              )
-            // Loaded state — show the verse and a navigation button.
-            : ListTile(
-                title: const Text('የዕለቱ ጥቅስ'),
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 4.0),
-                  child: Text(
-                    '"${_verseOfDay!['text']}"\n${_verseOfDay!['book']} ${_verseOfDay!['chapter']}:${_verseOfDay!['verse']}',
-                    style: const TextStyle(fontStyle: FontStyle.italic),
+        // 2. DYNAMIC DAILY QUOTE
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: 16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF2C2C2E) : Colors.grey[100],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.format_quote, color: Color(0xFF9E1B32), size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '${dailyVerse['text']} — ${dailyVerse['ref']}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontStyle: FontStyle.italic,
+                    color: isDark ? Colors.grey[300] : Colors.grey[800],
                   ),
-                ),
-                trailing: TextButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChapterReaderScreen(
-                        bookName: _verseOfDay!['book']!,
-                        chapterNumber: _verseOfDay!['chapter']!,
-                      ),
-                    ),
-                  ),
-                  child: const Text('ተጨማሪ ያንብቡ →'),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-      ),
-    );
-
-
-    Widget _recentReading = Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Card(
-            elevation: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text('የቅርብ ጊዜ ንባብ', style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-                ..._historyRepository.getAll().take(3).map((e) => ListTile(
-                      title: Text(e.book),
-                      subtitle: Text('ምዕራፍ ${e.chapter}'),
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChapterReaderScreen(bookName: e.book, chapterNumber: e.chapter, initialScrollOffset: e.scrollOffset))).then((_) => setState(() {})),
-                    )),
-              ],
-            ),
+            ],
           ),
-        );
-
-    // Notes preview widget removed (handled via Notes page)
-
-    Widget _welcomeOverlay = isFirstLaunch
-        ? Container(
-            color: Colors.black54,
-            child: Center(
-              child: Card(
-                margin: const EdgeInsets.symmetric(horizontal: 32),
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    const Text('ወደ Catholic መጽሐፍ ቅዱስ እንኳን በደህና መጡ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-                    const SizedBox(height: 12),
-                    const Text('73 መጻሕፍት • ያለ በይነመረብ የሚነበብ • የካቶሊክ ቀኖና', textAlign: TextAlign.center),
-                    const SizedBox(height: 20),
-                    ElevatedButton(onPressed: () {
-                      StorageService.setString('firstLaunchDone', 'true');
-                      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const MainNavigationController()));
-                    }, child: const Text('ማንበብ ይጀምሩ')),
-                  ]),
-                ),
-              ),
-            ),
-          )
-        : const SizedBox.shrink();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('ANLEYLAB BIBLE', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: 'ቅንብሮች',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => SettingsScreen(settings: globalSettings, onUpdate: () => setState(() {}))),
-              );
-            },
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          Center(
-            child: Container(
-              constraints: BoxConstraints(maxWidth: isTablet ? 650 : double.infinity),
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 24),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text('☀️ ሰላም!', style: TextStyle(fontSize: 16)),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text('አንሌይላብ መጽሐፍ ቅዱስ', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text('"ሕግህ ለእግሬ መብራት፥ ለመንገዴም ብርሃን ነው።"\nመዝሙረ ዳዊት 118:105', style: TextStyle(fontStyle: FontStyle.italic)),
-                    ),
-                    const Divider(thickness: 1, height: 32),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Card(
-                        elevation: 3,
-                        child: ListTile(
-                          leading: const Icon(Icons.play_arrow, color: Colors.blue, size: 36),
-                          title: const Text('ማንበብ ይቀጥሉ'),
-                          subtitle: _latestEntry != null
-                              ? Text('${_latestEntry.book} ምዕራፍ ${_latestEntry.chapter}')
-                              : const Text('ምንም የቅርብ ጊዜ ንባብ የለም'),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () {
-                            if (_latestEntry != null) {
-                              Navigator.push(context, MaterialPageRoute(builder: (_) => ChapterReaderScreen(bookName: _latestEntry.book, chapterNumber: _latestEntry.chapter, initialScrollOffset: _latestEntry.scrollOffset))).then((_) => setState(() {}));
-                            } else {
-                              Navigator.push(context, MaterialPageRoute(builder: (_) => const BibleScreen())).then((_) => setState(() {}));
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _todayVerse,
-                    const SizedBox(height: 16),
-                    _recentReading,
-                     const SizedBox(height: 32),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          _welcomeOverlay,
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
